@@ -3,7 +3,11 @@ import argparse
 import numpy as np
 import tensorflow as tf
 
-from scipy.misc import imread, imsave, imresize
+# from scipy.misc import imread, imsave, imresize
+# scipy imread & co are deprecated, replacing with equivalent in skimage
+# https://stackoverflow.com/questions/49686013/using-skimage-to-replace-scipy-misc-imread
+
+from skimage import io
 from matplotlib import pyplot as plt
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
