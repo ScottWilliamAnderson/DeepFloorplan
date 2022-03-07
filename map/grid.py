@@ -1,5 +1,10 @@
+from tracemalloc import start
+from importlib_metadata import NullFinder
 import numpy as np
 
+
+
+# (x=0,y=0) of the grid is in the top right corner
 class Grid():
     def __init__(self, sizeX, sizeY):
          self.sizeX = sizeX
@@ -16,6 +21,8 @@ class Grid():
             "balcony": (255,224,224), 
             "opening": (255, 60,128) # door & window 
             }
+         global tileMap
+         tileMap = {v: k for k, v in rgbMap.items()}
     
         #  create a 2d numpy array of the given size
          self.grid = self.createGrid(sizeX, sizeY)
@@ -38,6 +45,40 @@ class Grid():
     
     def getAsList(self):
         return self.grid.flatten()
+    
+    # returns the RGB value stored within the grid at a given x,y
+    def getRGBValue(self, x, y):
+        return self.grid[int(x), int(y)]
+    
+    # returns the type of tile at that x, y location
+    def getTileType(self, x, y):
+        tileType = None
+        try:
+            tileType = tileMap[(self.getRGBValue(x, y))]
+        except:
+            tileType = tileMap[(255, 255, 255)]
+        return tileType
+    
+    def getAdjacentCoords(self, x, y):
+        adjacentTiles = {"north" : (x, y-1),
+                         "east" : (x+1, y),
+                         "south" : (x, y+1),
+                         "west" : (x-1, y)}
+        return adjacentTiles
+    
+    def getAdjacentTiles(self, x, y):
+        adjacentTiles = {k: self.getTileType(v) for k, v in self.getAdjacentCoords(x, y)}
+        return adjacentTiles
+    
+    # returns a list of instances of a tile which are all adjacent to each other
+    # i.e. finds a window's individual tiles and returns them as a list
+    def coagulateTiles(self, tileType, startX, startY):
+        if not self.getTileType(startX, startY) == tileType:
+            return
+        # for adjacent in self.getAdjacentTiles(startX, startY):
+        
+        return 
+        
     
     # calculate the euclidian distance between two RGB values
     # start and end are tuples (r, g, b)
