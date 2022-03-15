@@ -1,6 +1,4 @@
 import os
-from re import S
-from weakref import finalize
 from PIL import Image, ImageFilter
 from PIL.ImageFilter import (
     GaussianBlur
@@ -90,10 +88,24 @@ class MapGenerator:
 
 if __name__ == "__main__":
     newMap = MapGenerator()
-    newMap.create()
+    # newMap.create()
     
     
-    # newMap.createFromSaveFile()
+    newMap.createFromSaveFile()
+    
+    openings  = newMap.grid.tileSearch("opening")
+    print(openings)
+    print(sum(len(x) for x in openings))
+    
+      
+    # otherSide = newMap.grid.otherSide(38, 86, 33, 90, 27)
+    # 31, 92, 30, 93
+    # print(otherSide)
+    # openings = newMap.grid.tileSearch("opening")
+    # print(openings)
+    
+    # print the sublists in tilesearch return:
+    # print(sum(isinstance(i, list) for i in openings))
     
     # x, y = newMap.finalSize/2, newMap.finalSize/2
     # print(x, y)
