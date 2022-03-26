@@ -1,7 +1,7 @@
 from collections import Counter
 import copy
 import numpy as np
-
+from opening import Opening
 
 # (x=0,y=0) of the grid is in the top left corner
 class Grid():
@@ -35,6 +35,10 @@ class Grid():
         global tileMap
         tileMap = {v: k for k, v in rgbMap.items()}
         
+        # dictionary containing the opening shapes in the grid
+        # opened as empty
+        self.openingDict = dict()
+        
         # initialise the starting grid
         # create a 2d numpy array of the given size
         self.grid = self.createGrid(sizeX, sizeY)
@@ -61,7 +65,11 @@ class Grid():
             locationY (int): the y coordinate of the grid's pixel you want to change
             rgbTuple (tuple): the RGBA colour as a 4-tuple (r, g, b, a)
         """        
-        self.grid[locationX,locationY] = rgbTuple
+        if len(rgbTuple) == 3:
+            rgbTuple = rgbTuple + (255,)
+            self.grid[locationX,locationY] = rgbTuple
+        else:
+            self.grid[locationX,locationY] = rgbTuple
         
     def getSelf(self):
         """returns the current grid instance, i.e. self
@@ -95,7 +103,6 @@ class Grid():
         """        
         return self.grid.flatten()
     
-    
     def getRGBValue(self, x, y):
         """Returns the RGB value stored within the grid at a given x,y
 
@@ -107,7 +114,6 @@ class Grid():
             tuple: A 4-tuple containing the RGBA colour (r, g, b, a)
         """        
         return self.grid[int(x), int(y)]
-    
     
     def averagePixel(self, listOfPixels):
         """returns the center pixel of a shape (a list of pixels)
@@ -176,7 +182,6 @@ class Grid():
         adjacentTiles = {k: self.getTileType(v[0], v[1]) for k, v in self.getAdjacentCoords(x, y).items()}
         return adjacentTiles
     
-
     def tileSearch(self, tile):
         """returns a 2d list containing all the pixels 
         of each shape of a searched tile type as a sublist
@@ -229,7 +234,24 @@ class Grid():
         adjacentPixels = list(self.getAdjacentCoords(x, y).values())
         for pixel in adjacentPixels:
             self.coagulateShape(tile, pixel[0], pixel[1], shapeList)
-                        
+    
+    def findOpenings(self):
+        """creates a dict of all the opening objects present in the grid
+        """        
+        openingList = self.tileSearch("opening")
+        i = 0
+        for sublist in openingList:
+            i +=1
+            self.openingDict[i] = Opening(sublist)
+           
+    def getOpenings(self):
+        """returns the dictionary of opening shapes present in the grid
+
+        Returns:
+            dict: dictionary of the openings in the format {int(1): Opening()...}
+        """        
+        return self.openingDict 
+    
     def countTiles(self, tile):
         """Counts the amount of tiles of a certain type that exist on the grid
 
@@ -245,7 +267,7 @@ class Grid():
                 count +=1
         return count        
     
-
+    
     def getLine(self, startX, startY, endX, endY):
         """finds the line between two coordinates
 
@@ -264,6 +286,8 @@ class Grid():
             yx: 0 or 1 or -1, 
             yy: 0 or 1 or -1
         """        
+        
+        
         deltaX = endX - startX
         deltaY = endY - startY
         
@@ -286,8 +310,6 @@ class Grid():
             xx, xy, yx, yy = 0, deltaYSign, deltaXSign, 0
 
         return deltaX, deltaY, xx, xy, yx, yy
-    
-    
     
     def pixelsBetweenTwoPoints(self, startX, startY, endX, endY):
         """function that returns all the pixels in the line that connects two grid coordinates
@@ -338,19 +360,21 @@ class Grid():
         
         line = []
         D = 2 * deltaY - deltaX
-        y = 5
+        y = 0
         
-        for x in range(deltaX + 1, deltaX + openingListLength):
+        for x in range(deltaX, min(deltaX + openingListLength, self.getSizeX())):
             # print("checking: " + str((startX + x*xx + y*yx, startY + x*xy + y*yy)))
             # print(self.getTileType(startX + x*xx + y*yx, startY + x*xy + y*yy))
-            if not self.getTileType(startX + x*xx + y*yx, startY + x*xy + y*yy) == "opening":
-                # print(str((startX + x*xx + y*yx, startY + x*xy + y*yy)) + " is not an opening")
-                if len(line) < 2:
-                    line.append((startX + x*xx + y*yx, startY + x*xy + y*yy))
-            if D >= 0:
-                y += 1
-                D -= 2 * deltaX
-            D += 2 * deltaY
+            if (startX + x*xx + y*yx) < self.getSizeX() and (startY + x*xy + y*yy) < self.getSizeY():
+                if not self.getTileType(startX + x*xx + y*yx, startY + x*xy + y*yy) == "opening":
+                    # print(str((startX + x*xx + y*yx, startY + x*xy + y*yy)) + " is not an opening")
+                    if len(line) < 2:
+                        line.append((startX + x*xx + y*yx, startY + x*xy + y*yy))
+                if D >= 0:
+                    y += 1
+                    D -= 2 * deltaX
+                D += 2 * deltaY
+        # print("passthroughPixels: " + str(line))
         return line
     
     # todo: remove OpeningX and openingY, replace with averagePixel()
@@ -368,41 +392,34 @@ class Grid():
             string: the most common tile on the other side of an opening
         """        
         flipsidePixels = self.passThroughOpening(startX, startY, openingX, openingY, openingListLength)
-        # print(flipsidePixels)
         pixelsToSearch = []
         for pixel in flipsidePixels:
             adjacent = self.getAdjacentCoords(pixel[0], pixel[1])
             for adjacentPixel in adjacent:
                 if adjacent[adjacentPixel] not in pixelsToSearch:
                     pixelsToSearch.append(self.getTileType(adjacent[adjacentPixel][0], adjacent[adjacentPixel][1]))
-        
+        # print(pixelsToSearch)
         tileCounts = Counter(pixelsToSearch)
-            
         return tileCounts.most_common(1)[0][0]
         
             
-    
-    def getWallsInLine(self, lineAsListOfPixels):
-        """function that count how many wall pixels are in a given line on the grid
+    def getObstructionsInLine(self, lineAsListOfPixels, pixelsToIgnore = None):     
+        """function that count how many wall pixels or opening pixels are in a given line on the grid
 
         Args:
             lineAsListOfPixels (list): the list of pixels that make up a line
+            pixelsToIgnore (list, optional): list of pixels to ignore (e.g. the opening's own pixels)
 
         Returns:
-            int: the number of wall tiles encountered in that line
+            int: the number of wall or opening tiles encountered in that line
         """        
-        wallNum = 0
-        for pixel in lineAsListOfPixels:
+        obstructionNum = 0
+        searchable = [pixel for pixel in lineAsListOfPixels if pixel not in pixelsToIgnore]
+        for pixel in searchable:
             # if that pixel is a wall
-            if self.grid[pixel[0], pixel[1]] == (0, 0, 0):
-                wallNum += 1
-        return wallNum
-        
-        # # function that returns the tile type on the other side of an opening, given a starting location
-    # def otherSide(self, startX, startY, openingAsList):
-    #     openingCenter = self.averagePixel(openingAsList)
-    
-                        
+            if self.getTileType(pixel[0], pixel[1]) == "wall" or self.getTileType(pixel[0], pixel[1]) == "opening" :
+                obstructionNum += 1
+        return obstructionNum
 
     def rgbDistance(self, start, end):
         """calculate the euclidian distance between two RGB values
@@ -418,7 +435,7 @@ class Grid():
         end = np.array(end)
         return np.linalg.norm(start-end)
     
-    def crushDithering(self, grid):
+    def crushDithering(self, givenGrid):
         """replaces all colours in the given grid with the closest colour present in rgbMap,
         using the rgbDistance function
 
@@ -428,14 +445,15 @@ class Grid():
         Returns:
             Grid: the crushed grid post-processing
         """        
-        crushedGrid = Grid(grid.getSizeX(), grid.getSizeY())
+        print(givenGrid.getRGBValue(0,0))
+        crushedGrid = Grid(givenGrid.getSizeX(), givenGrid.getSizeY())
         for x in range(0, crushedGrid.getSizeX()):
             for y in range(0, crushedGrid.getSizeY()):
                 closestColour = None   
-                closestDistance = (256*256*256+1)
+                closestDistance = (256*256*256*256+1)
                 # print("looking at pixel " + str(x) + ", "+ str(y))
                 for colour in rgbMap:
-                    distance = grid.rgbDistance(grid.grid[x, y], rgbMap.get(colour))
+                    distance = givenGrid.rgbDistance(givenGrid.grid[x, y], rgbMap.get(colour))
                     # print("distance to " + str(colour) + " is " + str(distance))
                     # print("closestDistance = " + str(closestDistance))
                     if distance < float(closestDistance):
@@ -444,7 +462,7 @@ class Grid():
 
                 # print("closest colour is " + str(closestColour) + " at distance " + str(closestDistance))
                 # print(rgbMap.get(closestColour))
-                rgb = rgbMap.get(closestColour, (255,255,255, 255))
+                rgb = rgbMap.get(closestColour, (255,255,255,255))
                 # print(rgb)
                 crushedGrid.populate(x,y,rgb)
                 
