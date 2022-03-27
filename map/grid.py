@@ -1,7 +1,7 @@
 from collections import Counter
 import copy
 import numpy as np
-from opening import Opening
+from .opening import Opening
 
 # (x=0,y=0) of the grid is in the top left corner
 class Grid():
@@ -14,6 +14,11 @@ class Grid():
             sizeX (int): the horizontal size X of the grid
             sizeY (int): the vertical size Y of the grid
         """        
+        # check that the sizeX and sizeY are valid, if not throw an error
+        if sizeX <= 0 or sizeY <= 0:
+            raise ValueError("Grid size must be greater than 0")
+        if sizeX > 1000 or sizeY > 1000:
+            raise ValueError("Grid sizes must be less than 1000")
         self.sizeX = sizeX
         self.sizeY = sizeY
         
@@ -65,6 +70,16 @@ class Grid():
             locationY (int): the y coordinate of the grid's pixel you want to change
             rgbTuple (tuple): the RGBA colour as a 4-tuple (r, g, b, a)
         """        
+        if locationX < 0 or locationY < 0:
+            raise ValueError("Grid coordinates must be greater than 0")
+        if locationX > self.sizeX or locationY > self.sizeY:
+            raise ValueError("Grid coordinates must be less than the grid size")
+        for value in rgbTuple:
+            if value < 0 or value > 255:
+                raise ValueError("RGBA values must be between 0 and 255")
+        if not len(rgbTuple) == 4 or not len(rgbTuple) == 3:
+            raise ValueError("RGBA values must be a 3-tuple (r, g, b) or 4-tuple (r, g, b, a)")
+        
         if len(rgbTuple) == 3:
             rgbTuple = rgbTuple + (255,)
             self.grid[locationX,locationY] = rgbTuple
