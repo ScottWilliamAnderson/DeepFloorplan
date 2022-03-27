@@ -3,11 +3,7 @@ import argparse
 import numpy as np
 import tensorflow as tf
 
-# from scipy.misc import imread, imsave, imresize
-# scipy imread & co are deprecated, replacing with equivalent in skimage
-# https://stackoverflow.com/questions/49686013/using-skimage-to-replace-scipy-misc-imread
-
-from skimage import io
+from scipy.misc import imread, imsave, imresize
 from matplotlib import pyplot as plt
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -38,7 +34,7 @@ floorplan_map = {
 def ind2rgb(ind_im, color_map=floorplan_map):
 	rgb_im = np.zeros((ind_im.shape[0], ind_im.shape[1], 3))
 
-	for i, rgb in color_map.iteritems():
+	for i, rgb in color_map.items():
 		rgb_im[(ind_im==i)] = rgb
 
 	return rgb_im
@@ -57,8 +53,8 @@ def main(args):
 					tf.local_variables_initializer()))
 
 		# restore pretrained model
-		saver = tf.train.import_meta_graph('./pretrained/pretrained_r3d.meta')
-		saver.restore(sess, './pretrained/pretrained_r3d')
+		saver = tf.train.import_meta_graph('/content/DeepFloorplan/pretrained/pretrained_r3d.meta')
+		saver.restore(sess, '/content/DeepFloorplan//pretrained/pretrained_r3d')
 
 		# get default graph
 		graph = tf.get_default_graph()
@@ -83,7 +79,7 @@ def main(args):
 		plt.subplot(121)
 		plt.imshow(im)
 		plt.subplot(122)
-		plt.imshow(floorplan_rgb/255.)
+		plt.imsave('result.jpg',floorplan_rgb/255.)
 		plt.show()
 
 if __name__ == '__main__':
