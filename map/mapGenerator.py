@@ -25,17 +25,17 @@ class MapGenerator:
     def create(self):
         """main function to convert the DeepFloorPlan output to an image compatible with the grid
         """        
-        # convert the jpg of the model to a png
-        try:
-            self.saveAsPNG()
-        except:
-            print("couldn't save as PNG")
-            pass
+        # # convert the jpg of the model to a png
+        # try:
+        #     self.saveAsPNG()
+        # except:
+        #     print("couldn't save as PNG")
+        #     pass
         # create the grid based on the model output
-        self.createGrid()
+        self.createGrid(filename="result.png")
         print("populating the grid with data")
         # populate the empty grid with the model output RGB values
-        self.grid = self.populateGrid(self.workingGridSize, self.grid, self.floorplan)
+        self.grid = self.populateGrid(self.floorplan.size[0], self.grid, self.floorplan)
         # print(self.grid.getAsList())
         print("fixing ML output noise")
         # Gaussian Blur to remove jpg noise, and to fix overfitting of the tiles
@@ -50,7 +50,7 @@ class MapGenerator:
         self.floorplan.close()   
         
     def createFromSaveFile(self, example = False):
-        """populates the final grid with the RGB values of either the example image or the DeepFloorPlan model output image
+        """populates the final grid with the RGB values of either the example image or the cleaned DeepFloorPlan model output image
 
         Args:
             example (bool, optional): indicate whether the example showcase was chosen. Defaults to False.
@@ -63,7 +63,7 @@ class MapGenerator:
         self.grid = self.populateGrid(self.finalSize, self.grid, self.floorplan)
         self.floorplan.close()
         
-    
+    # not used
     def saveAsPNG(self):
         """get output of the DeepFloorPlan and save it as png
         """        
@@ -83,10 +83,10 @@ class MapGenerator:
             # print("opening " + str(path))
             self.floorplan = Image.open(path)
             
-            self.grid = Grid(self.finalSize, self.finalSize)
+            self.grid = Grid(self.floorplan.size[0], self.floorplan.size[0])
         else:
-            self.floorplan = Image.open(os.path.join("map","result.png"))
-            self.grid = Grid(self.workingGridSize, self.workingGridSize)
+            self.floorplan = Image.open(os.path.join("map",filename))
+            self.grid = Grid(self.floorplan.size[0], self.floorplan.size[1])
             
 
     def populateGrid(self, gridsize, givenGrid, image):

@@ -9,6 +9,8 @@ import os
 # import the time module, for sleeping during playback
 import time
 
+from num2words import num2words
+
 '''
 OpenAl uses a right-handed Cartesian coordinate system (RHS), 
 where in a frontal default view X (thumb) points right, 
@@ -58,9 +60,8 @@ class SoundGenerator():
         """        
         
         
-        self.engine.say("You are standing in the " + str(self.findQuadrant(x, y)) + "section of the floorplan")
-        self.engine.say("You are standing at x coordinate "+ str(x) + ", and y coordinate " + str(y))
-        self.engine.say("You are facing " + str(self.facing[self.listener.orientation]))
+        self.engine.say("You are standing in the " + str(self.findQuadrant(x, y)) + "quadrant of the floorplan, facing " + str(self.facing[self.listener.orientation]))
+        self.engine.say("From the top-left corner, you are " + num2words(y) + " down, and " + num2words(x) + "across")
         self.engine.say("There is " + str(self.grid.getTileType(x, y)) + " here")
         self.engine.runAndWait()
         
@@ -96,15 +97,15 @@ class SoundGenerator():
         
         
         
-    def prepareOpeningSources(self):
+    def prepareOpeningSources(self, x, y):
         """ prepare the opening sources for playback 
 
         Returns:
             listener: the listener object
         """        
-        
+        self.listener.move_to((x, y, 0))
         # check listener is within grid boundary
-        if self.listener.position[0] < self.grid.getSizeX() and self.listener.position[0] < self.grid.getSizeY(): 
+        if 0 <= self.listener.position[0] < self.grid.getSizeX() and 0 <= self.listener.position[0] < self.grid.getSizeY(): 
             openings = self.openingDict.values()
             for opening in openings:
                 coords = opening.getLocation()
@@ -120,7 +121,7 @@ class SoundGenerator():
                     source = oalOpen(window)
                 
                 # increase the sound "dampening" to emulate a real room
-                source.set_rolloff_factor(2.0)
+                source.set_rolloff_factor(1.0)
                 
                 # source.set_position(coords)
                 source.set_position((coords[0], coords[1], 0))

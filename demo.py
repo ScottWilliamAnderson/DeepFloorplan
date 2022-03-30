@@ -41,7 +41,7 @@ def ind2rgb(ind_im, color_map=floorplan_map):
 
 def main(args):
 	# load input
-	im = imread(args.im_path, mode='RGB')
+	im = imread(args, mode='RGB')
 	im = im.astype(np.float32)
 	im = imresize(im, (512,512,3)) / 255.
 
@@ -53,8 +53,9 @@ def main(args):
 					tf.local_variables_initializer()))
 
 		# restore pretrained model
-		saver = tf.train.import_meta_graph('/content/DeepFloorplan/pretrained/pretrained_r3d.meta')
-		saver.restore(sess, '/content/DeepFloorplan//pretrained/pretrained_r3d')
+		# saver = tf.train.import_meta_graph('/DeepFloorplan/pretrained/pretrained_r3d.meta')
+		saver = tf.train.import_meta_graph(os.path.join(os.getcwd(), "pretrained\pretrained_r3d.meta"))
+		saver.restore(sess, os.path.join(os.getcwd(), "pretrained\pretrained_r3d"))
 
 		# get default graph
 		graph = tf.get_default_graph()
@@ -79,8 +80,9 @@ def main(args):
 		plt.subplot(121)
 		plt.imshow(im)
 		plt.subplot(122)
-		plt.imsave('result.jpg',floorplan_rgb/255.)
-		plt.show()
+		plt.imsave(os.path.join(os.getcwd(), 'map', 'result.png'),floorplan_rgb/255)
+		# plt.show()
+		return
 
 if __name__ == '__main__':
 	FLAGS, unparsed = parser.parse_known_args()
