@@ -9,4 +9,3 @@ PyOpenAL
 pyttsx3
 hypothesis
 bresenham
-num2words

@@ -1,4 +1,5 @@
 from math import floor
+from tkinter.ttk import Progressbar
 from map import mapGenerator
 from sound import *
 from PIL import ImageTk,Image
@@ -94,19 +95,18 @@ class Gui():
         print('clicked upload Floor Plan')
         # root.withdraw()
 
-        self.floorPlanPath=filedialog.askopenfilename(filetypes=[("JPG file", "*.jpg")])
+        self.floorPlanPath=filedialog.askopenfilename(filetypes=[("JPG file", "*.jpg"), ("JPEG file", "*.jpeg")])
         self.canvas.destroy()
         self.root.update()
         
         self.canvas = tk.Canvas(self.root, bg='white', highlightthickness=0)
         running = self.canvas.create_text(self.root.winfo_width()/2, self.root.winfo_height()/2, text="Running Model...", font=('arial', 20, 'bold'))
+        timed = self.canvas.create_text(self.root.winfo_width()/2, (self.root.winfo_height()/9) * 5, text="Average expected runtime: 25 seconds", font=('arial', 10, 'italic'))
         self.canvas.pack(fill=tk.BOTH, expand=True)
         self.canvas.update()
         m.main(self.floorPlanPath)
         self.prepareUploadedSoundStage()
-        
         self.canvas.destroy()
-        
         self.uploadedGui()
         
     def uploadedGui(self):
@@ -116,11 +116,14 @@ class Gui():
         self.canvas.pack(fill=tk.BOTH, expand=True)
         mapDir = os.path.join(os.getcwd(), "map", "saved.png")
         img = Image.open(mapDir)
-        fullscreenImg = ImageTk.PhotoImage(self.resize_PIL(img, min(self.root.winfo_height(), self.root.winfo_width())))
+        fullscreenImg = ImageTk.PhotoImage(self.resize_PIL(img, min(int(self.root.winfo_height()), int(self.root.winfo_width()/2))))
         self.canvas.create_image(0, 0, image=fullscreenImg, anchor="nw") 
         
+        global scale
+        scale = fullscreenImg.width()/img.size[0]
+        
         original = Image.open(self.floorPlanPath)
-        originalImage = ImageTk.PhotoImage(original)
+        originalImage = ImageTk.PhotoImage(self.resize_PIL(original, min(int(self.root.winfo_height()), int(self.root.winfo_width()/2))))
         reference = self.canvas.create_image(self.root.winfo_width(), self.root.winfo_height(), image=originalImage, anchor="se")
         self.canvas.tag_raise(reference)
         
@@ -158,17 +161,19 @@ class Gui():
         self.canvas.pack(fill=tk.BOTH, expand=True)
         mapDir = os.path.join(os.getcwd(), "map", "example.png")
         img = Image.open(mapDir)
-        fullscreenImg = ImageTk.PhotoImage(self.resize_PIL(img, min(self.root.winfo_height(), self.root.winfo_width())))
+        fullscreenImg = ImageTk.PhotoImage(self.resize_PIL(img, min(int(self.root.winfo_height()), int(self.root.winfo_width()/2))))
         self.canvas.create_image(0, 0, image=fullscreenImg, anchor="nw") 
         self.canvas.bind("<Button-1>", self.mouseClick)
         self.root.bind('q', self.rotateCounterClockwise)
         self.root.bind('e', self.rotateClockwise)
         
+        global scale
+        scale = fullscreenImg.width()/img.size[0]
         
         
         originalDir = os.path.join(os.getcwd(), "demo", "exampleSquare.jpg")
         original = Image.open(originalDir)
-        originalImage = ImageTk.PhotoImage(original)
+        originalImage = ImageTk.PhotoImage(self.resize_PIL(original, min(int(self.root.winfo_height()), int(self.root.winfo_width()/2))))
         reference = self.canvas.create_image(self.root.winfo_width(), self.root.winfo_height(), image=originalImage, anchor="se")
         self.canvas.tag_raise(reference)
         self.canvas.update()
@@ -241,14 +246,13 @@ class Gui():
 
         Args:
             im (image): the image to be resized
-            output_edge (int): the size that the output image's smallest side should be 
+            output_edge (int): the size that the output image's largest side should be 
 
         Returns:
             image: the resized image
         """        
-        global scale
         scale = output_edge / max(im.size)
-        new = Image.new(im.mode, (output_edge, output_edge), (0, 0, 0))
+        new = Image.new(im.mode, (output_edge, output_edge), (255, 255, 255))
         paste = im.resize((int(im.width * scale), int(im.height * scale)), resample=Image.NEAREST)
         new.paste(paste, (0, 0))
         return new

@@ -9,8 +9,6 @@ import os
 # import the time module, for sleeping during playback
 import time
 
-from num2words import num2words
-
 '''
 OpenAl uses a right-handed Cartesian coordinate system (RHS), 
 where in a frontal default view X (thumb) points right, 
@@ -61,7 +59,7 @@ class SoundGenerator():
         
         
         self.engine.say("You are standing in the " + str(self.findQuadrant(x, y)) + "quadrant of the floorplan, facing " + str(self.facing[self.listener.orientation]))
-        self.engine.say("From the top-left corner, you are " + num2words(y) + " down, and " + num2words(x) + "across")
+        self.engine.say("From the top-left corner, you are " + str(y) + " down, and " + str(x) + " across")
         self.engine.say("There is " + str(self.grid.getTileType(x, y)) + " here")
         self.engine.runAndWait()
         
