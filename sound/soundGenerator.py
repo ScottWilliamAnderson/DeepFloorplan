@@ -15,7 +15,7 @@ where in a frontal default view X (thumb) points right,
 Y (index finger) points up, 
 and Z (middle finger) points towards the viewer/camera.
 
-therefore, to match the grid coordinate system of (x,y) (0, 0) in the top-right corner, 
+therefore, to match the grid coordinate system of (x,y) (0, 0) in the top-left corner, 
 a listener facing north on the grid will have an orientation 
 (0, -1, 0, 0, 0, -1)
 where 
@@ -45,7 +45,7 @@ class SoundGenerator():
             if "English" in voice.name:
                 self.engine.setProperty('voice', voice.id)
         # fix volume to match rest of sound stage
-        self.engine.setProperty('volume', 0.8)
+        self.engine.setProperty('volume', 0.75)
         
         
 
